@@ -38,6 +38,14 @@ bash kb_wiki_skill/install.sh --dry-run            # show the actions only
 
 The script copies the skill to `~/.claude/skills/`, creates or clones the wiki, adds `@<wiki>/CLAUDE.md` to `~/.claude/CLAUDE.md` (once), and prints the two `export` lines to add to your shell profile. It is safe to run again.
 
+**Update** (routes 2 and manual copy). `~/.claude/skills/<skill>` is a copy, not a git repository: `git pull` does not work there. Download the new version to a temporary folder, reinstall, delete the download. The wiki is not changed.
+
+```bash
+tmp=$(mktemp -d) && git clone -q --depth 1 https://github.com/QDher/kb_wiki_skill.git "$tmp/kbs" && bash "$tmp/kbs/install.sh" --python; rm -rf "$tmp"
+```
+
+Omit `--python` for the shell version. On Nibi run `module load python` first. Plugin installs (route 1) update with `claude plugin marketplace update kb-wiki-skills` and `claude plugin update kb-wiki-shell@kb-wiki-skills`.
+
 ### 3. Claude app (claude.ai and desktop)
 
 The Claude app cannot install a skill from a repository. Upload it once:
