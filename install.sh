@@ -111,6 +111,8 @@ fi
 cat <<MSG
 
 Done. Plugin $PLUGIN@$MARKET updates itself from GitHub; new versions load at the next start of Claude Code.
-Add to your shell profile (~/.bashrc or ~/.zshrc):  export KB_ROOT=$KB
+Add to your shell profile (~/.bashrc or ~/.zshrc):
+  export KB_ROOT=$KB
+  export SKILL_DIR="\$(ls -td ~/.claude/plugins/cache/$MARKET/$PLUGIN/*/$PLUGIN | head -n 1)"
 Restart Claude Code; the skill is listed as /$PLUGIN:$PLUGIN.
 MSG
