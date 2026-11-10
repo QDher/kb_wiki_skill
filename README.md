@@ -11,29 +11,58 @@ Both produce the same wiki layout and use the same page template. Inventories an
 
 ## Install
 
+Pick one route. Routes 1 and 2 install the shell version (`kb-wiki-shell`); route 3 covers the Claude app.
+
+### 1. Claude Code plugin (two commands, no clone)
+
+Run in your terminal:
+
 ```bash
-git clone https://github.com/QDher/kb_wiki_skill.git
-mkdir -p ~/.claude/skills
-
-# Python version (Nibi)
-cp -r kb_wiki_skill/kb-wiki ~/.claude/skills/
-chmod +x ~/.claude/skills/kb-wiki/scripts/*
-
-# Shell version (other machines)
-cp -r kb_wiki_skill/kb-wiki-shell ~/.claude/skills/
-chmod +x ~/.claude/skills/kb-wiki-shell/scripts/*.sh
+claude plugin marketplace add QDher/kb_wiki_skill
+claude plugin install kb-wiki-shell@kb-wiki-skills
 ```
 
-Then set the variables and create the wiki:
+Or, inside a Claude Code session: `/plugin marketplace add QDher/kb_wiki_skill`, then `/plugin install kb-wiki-shell@kb-wiki-skills`. For a private repository, git must be able to authenticate to GitHub (`gh auth login`, an SSH key, or a credential helper). Update later with `claude plugin update kb-wiki-shell@kb-wiki-skills`.
+
+The plugin installs the skill only. Create the wiki afterwards, or ask Claude Code: "use the kb-wiki-shell skill, init mode".
+
+### 2. Installer script (skill and wiki in one step)
 
 ```bash
+git clone https://github.com/QDher/kb_wiki_skill.git
+bash kb_wiki_skill/install.sh                      # shell version, creates ~/kb
+bash kb_wiki_skill/install.sh --python             # Python version (Nibi), creates ~/kb
+bash kb_wiki_skill/install.sh --wiki-repo https://github.com/<owner>/<wiki-repo>.git   # clone an existing wiki
+bash kb_wiki_skill/install.sh --dry-run            # show the actions only
+```
+
+The script copies the skill to `~/.claude/skills/`, creates or clones the wiki, adds `@<wiki>/CLAUDE.md` to `~/.claude/CLAUDE.md` (once), and prints the two `export` lines to add to your shell profile. It is safe to run again.
+
+### 3. Claude app (claude.ai and desktop)
+
+The Claude app cannot install a skill from a repository. Upload it once:
+
+```bash
+zip -r kb-wiki-shell.zip kb-wiki-shell
+```
+
+Then, in the app, open Settings > Capabilities > Skills (the menu name may vary), upload `kb-wiki-shell.zip`, and enable it. Code execution must be on. In the app the skill runs in a cloud sandbox with no access to your computer or Nibi: use it for `lint` and for conversion or digests of files uploaded to the chat. Ingest, update, and git work stay in Claude Code.
+
+### Manual copy
+
+```bash
+mkdir -p ~/.claude/skills
+cp -r kb_wiki_skill/kb-wiki-shell ~/.claude/skills/      # or kb-wiki
+chmod +x ~/.claude/skills/kb-wiki-shell/scripts/*.sh     # or kb-wiki/scripts/*
 export KB_ROOT=$HOME/kb
-export SKILL_DIR=$HOME/.claude/skills/kb-wiki          # or kb-wiki-shell
+export SKILL_DIR=$HOME/.claude/skills/kb-wiki-shell      # or kb-wiki
 bash $SKILL_DIR/scripts/init_kb.sh $KB_ROOT
 echo "@$KB_ROOT/CLAUDE.md" >> ~/.claude/CLAUDE.md
 ```
 
-In Claude Code, run `/kb-wiki` or `/kb-wiki-shell`. Each `SKILL.md` describes the modes: `init`, `ingest`, `update`, `search`, `lint`.
+In Claude Code, run `/kb-wiki` or `/kb-wiki-shell` (installed as a plugin: `/kb-wiki-shell:kb-wiki-shell`). Each `SKILL.md` describes the modes: `init`, `ingest`, `update`, `search`, `lint`.
+
+The Python version (`kb-wiki`) is not part of the plugin; use route 2 with `--python` or the manual copy.
 
 ## Layout of a wiki
 

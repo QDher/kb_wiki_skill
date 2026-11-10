@@ -27,6 +27,22 @@ The wiki is shared through git. `raw/` is not committed, so each machine keeps i
 
 ## Step 1 — Install the skill
 
+**Shortest routes** (see the repository README for details): as a Claude Code plugin,
+
+```bash
+claude plugin marketplace add QDher/kb_wiki_skill
+claude plugin install kb-wiki-shell@kb-wiki-skills
+```
+
+or with the installer script, which also creates the wiki and adds the `CLAUDE.md` import:
+
+```bash
+git clone https://github.com/QDher/kb_wiki_skill.git
+bash kb_wiki_skill/install.sh
+```
+
+With either route, continue at the check in item 3 below (plugin installs: the command is `/kb-wiki-shell:kb-wiki-shell`). The manual steps follow.
+
 1. Copy the skill folder (from a clone of this repository, or by extracting the archive):
 
 ```bash

@@ -17,7 +17,7 @@ Same wiki and workflow as the Python `kb-wiki` skill (used on Nibi); this versio
 ## Paths
 
 - `KB_ROOT` = wiki root (default `$HOME/kb`). `raw/` inside it holds originals and is never indexed.
-- `SKILL_DIR` = folder containing this file (`~/.claude/skills/kb-wiki-shell`).
+- `SKILL_DIR` = folder containing this file: `~/.claude/skills/kb-wiki-shell`, or `kb-wiki-shell/` inside the plugin folder (`${CLAUDE_PLUGIN_ROOT}/kb-wiki-shell`) when installed as a plugin.
 - Inventory and indexes are TSV files (tab-separated); they open in any spreadsheet app.
 
 ## Modes

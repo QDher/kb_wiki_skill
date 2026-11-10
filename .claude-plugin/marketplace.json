@@ -1,0 +1,14 @@
+{
+  "name": "kb-wiki-skills",
+  "description": "Skills that build and maintain a markdown knowledge wiki for Claude",
+  "owner": {
+    "name": "QDher"
+  },
+  "plugins": [
+    {
+      "name": "kb-wiki-shell",
+      "source": "./",
+      "description": "Knowledge wiki skill using bash and jq (no Python): inventory, convert, digest, triage, lint"
+    }
+  ]
+}

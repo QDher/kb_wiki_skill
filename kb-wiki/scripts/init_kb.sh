@@ -14,6 +14,10 @@ done
 if [ ! -d "$KB/.git" ]; then
   git -C "$KB" init -q
   git -C "$KB" add -A
-  git -C "$KB" commit -qm "init wiki" || true
+  # use a placeholder identity for this first commit only if git has none configured
+  if [ -z "$(git -C "$KB" config user.email 2>/dev/null)" ]; then
+    export GIT_AUTHOR_NAME=kb-wiki GIT_AUTHOR_EMAIL=kb-wiki@localhost GIT_COMMITTER_NAME=kb-wiki GIT_COMMITTER_EMAIL=kb-wiki@localhost
+  fi
+  git -C "$KB" commit -qm "init wiki" || echo "note: first commit skipped; set git user.name and user.email, then commit" >&2
 fi
 echo "wiki ready at $KB"
