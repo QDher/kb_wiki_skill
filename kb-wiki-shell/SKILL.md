@@ -1,6 +1,6 @@
 ---
 name: kb-wiki-shell
-description: Build and maintain the markdown knowledge wiki (kb/) without Python, using bash, standard Unix tools and jq - inventory sources, convert PDFs, images and chat transcripts to markdown, triage duplicate, outdated or failed material, distill pages, update INDEX.md, lint. Use when asked to create, ingest into, update, search or check the wiki, or at the end of a working session to record results.
+description: Build and maintain the markdown knowledge wiki (kb/) without Python, using bash, standard Unix tools and jq - inventory sources, convert PDFs, images and chat transcripts to markdown, triage duplicate, outdated or failed material, distill pages, update INDEX.md, lint, audit and de-duplicate existing pages (clean). Use when asked to create, ingest into, update, search, check or clean up the wiki, or at the end of a working session to record results.
 ---
 
 # kb-wiki-shell
@@ -57,12 +57,32 @@ If the wiki already exists (cloned from git), skip init.
 ### search (answer from the wiki)
 1. Read `INDEX.md`. 2. `grep -ril "<term>" $KB_ROOT --include=*.md --exclude-dir=raw --exclude-dir=archive` if the index is not enough. 3. Read only matching pages.
 
+### clean (audit existing pages)
+Run when the wiki grows, when pages contradict each other, or once a month. No edits before the user confirms.
+1. Baseline: `bash $SKILL_DIR/scripts/lint_kb.sh $KB_ROOT`. Note errors, warnings and the `INFO tokens` line.
+2. Read `INDEX.md`, then pages one directory or tag at a time (not all at once). Find:
+   - repeated commands or setups (lint `repeated command` warnings, same steps on several pages)
+   - contradictions between pages, and between `rules/` and `CLAUDE.md`
+   - narrative text, introductions, filler: candidates for short imperative bullets or numbered steps
+   - procedures in `CLAUDE.md` (lint `code block` warning): move to `workflows/` or a skill, keep a one-line pointer
+   - account-specific values on portable pages (lint warning): replace with `$USER`, `$HOME`, `$PROJECT`, `$SCRATCH`, or set `scope: account-specific`
+   - stale pages (`last_verified` warnings), deprecated pages still in `INDEX.md`, pages under 10 lines that belong on another page
+3. Propose, do not edit: one table `file | issue | proposed change | est. tokens saved` (tokens ~ characters / 4), then the diffs of the main changes. Merges keep one page as the single source; the other pages link to it.
+4. Wait for explicit confirmation. Apply only the confirmed items:
+   - merged or removed page: set `status: deprecated`, move to `archive/`, update links and `INDEX.md`
+   - keep facts and "Known pitfalls" lines; only wording, duplication and placement change
+5. Lint again; report tokens before/after (always loaded and total), changes applied, items left open.
+6. One `log.md` line; `git -C $KB_ROOT add -A && git -C $KB_ROOT commit -m "clean: <summary>"` (do not push unless asked).
+
 ### lint (check)
 `bash $SKILL_DIR/scripts/lint_kb.sh $KB_ROOT` - fix errors, report warnings to the user.
+Checks: frontmatter, sizes (CLAUDE.md 60, INDEX.md 150, pages 300 lines), staleness, index consistency, broken links and links leaving the wiki, duplicate titles, secrets, account-specific values on `scope: portable` pages, code blocks in CLAUDE.md, commands repeated on several pages. Last lines: `INFO tokens` (always loaded and total) and the error/warning count.
 
 ## Rules
 
 - Never read `raw/` or `archive/` unless the task requires it.
+- `clean` mode edits only after the user confirms the proposal.
+- Links stay inside the wiki: relative paths `[text](path/page.md)`, no absolute paths.
 - No account-specific values in pages: use `$USER`, `$HOME`, `$PROJECT`, `$SCRATCH`; otherwise set `scope: account-specific`.
 - No PDFs or images in claude.ai Project knowledge; only converted `.md`.
 - Commands for Nibi in workflow pages are documented, not run, on this machine.

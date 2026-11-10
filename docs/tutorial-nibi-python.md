@@ -290,7 +290,7 @@ git -C $KB_ROOT push      # after the session
 
 **Deprecate a page:** set `status: deprecated`, move it to `archive/`, remove its line from `INDEX.md`, and link its replacement.
 
-Run `lint` (Step 8) after each update, and at least once a month.
+Run `lint` (Step 8) after each update, and at least once a month. Ask Claude to run the skill in `clean` mode once a month or when pages overlap: it proposes merges, removals and rewrites with estimated token savings and edits only after you confirm.
 
 ## Step 10 — Use the wiki in the claude.ai web app
 

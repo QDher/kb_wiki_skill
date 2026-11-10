@@ -1,7 +1,7 @@
 {
   "name": "kb-wiki-shell",
   "displayName": "KB Wiki (shell)",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Build and maintain a markdown knowledge wiki that Claude reads through a short index. Uses bash and jq; no Python.",
   "author": {
     "name": "QDher"

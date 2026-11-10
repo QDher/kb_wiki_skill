@@ -1,6 +1,6 @@
 # kb_wiki_skill
 
-Claude Code skills that build and maintain a markdown knowledge wiki: inventory sources, convert PDFs, images and chat transcripts to markdown, triage duplicate/outdated/failed material, distill pages, index, lint. Claude reads the wiki through a short `INDEX.md` and opens only the pages a task needs.
+Claude Code skills that build and maintain a markdown knowledge wiki: inventory sources, convert PDFs, images and chat transcripts to markdown, triage duplicate/outdated/failed material, distill pages, index, lint, audit and de-duplicate existing pages. Claude reads the wiki through a short `INDEX.md` and opens only the pages a task needs.
 
 | Folder | Skill | Runtime | Use on |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ bash $SKILL_DIR/scripts/init_kb.sh $KB_ROOT
 echo "@$KB_ROOT/CLAUDE.md" >> ~/.claude/CLAUDE.md
 ```
 
-In Claude Code, run `/kb-wiki` or `/kb-wiki-shell` (installed as a plugin: `/kb-wiki-shell:kb-wiki-shell`). Each `SKILL.md` describes the modes: `init`, `ingest`, `update`, `search`, `lint`.
+In Claude Code, run `/kb-wiki` or `/kb-wiki-shell` (installed as a plugin: `/kb-wiki-shell:kb-wiki-shell`). Each `SKILL.md` describes the modes: `init`, `ingest`, `update`, `search`, `clean`, `lint`.
 
 The Python version (`kb-wiki`) is not part of the plugin; use route 2 with `--python` or the manual copy.
 
