@@ -11,7 +11,6 @@ This file covers the `kb-wiki-shell` skill (bash, standard Unix tools, `jq`). It
 - `jq` 1.6+: `brew install jq`, `apt install jq`, or `winget install jqlang.jq`.
 - Optional: `pdftotext` (poppler): `brew install poppler` or `apt install poppler-utils`. Without it, PDFs are read by Claude Code directly.
 - `git`.
-- The folder `kb-wiki-shell/` from this repository (or the archive `kb-wiki-shell.tar.gz`).
 
 **Differences from the Python version**
 
@@ -27,53 +26,30 @@ The wiki is shared through git. `raw/` is not committed, so each machine keeps i
 
 ## Step 1 — Install the skill
 
-**Shortest routes** (see the repository README for details): as a Claude Code plugin,
+The skill is the Claude Code plugin `kb-wiki-shell`. It updates itself from GitHub.
+
+1. Install the plugin, turn on auto-update and create the wiki (or clone it with `--wiki-repo <url>`):
 
 ```bash
-claude plugin marketplace add QDher/kb_wiki_skill
-claude plugin install kb-wiki-shell@kb-wiki-skills
-```
-
-or with the installer script, which also creates the wiki and adds the `CLAUDE.md` import:
-
-```bash
-git clone https://github.com/QDher/kb_wiki_skill.git
-bash kb_wiki_skill/install.sh
-```
-
-With either route, continue at the check in item 3 below (plugin installs: the command is `/kb-wiki-shell:kb-wiki-shell`). The manual steps follow.
-
-1. Copy the skill folder (from a clone of this repository, or by extracting the archive):
-
-```bash
-git clone https://github.com/QDher/kb_wiki_skill.git ~/kb_wiki_skill
-mkdir -p ~/.claude/skills
-cp -r ~/kb_wiki_skill/kb-wiki-shell ~/.claude/skills/
-chmod +x ~/.claude/skills/kb-wiki-shell/scripts/*.sh
-```
-
-or, from the archive:
-
-```bash
-mkdir -p ~/.claude/skills
-tar -xzf kb-wiki-shell.tar.gz -C ~/.claude/skills
-chmod +x ~/.claude/skills/kb-wiki-shell/scripts/*.sh
+curl -fsSL https://raw.githubusercontent.com/QDher/kb_wiki_skill/main/install.sh | bash
 ```
 
 2. Set the variables (add to `~/.bashrc`, or `~/.zshrc` on macOS, then reload the shell):
 
 ```bash
 export KB_ROOT=$HOME/kb
-export SKILL_DIR=$HOME/.claude/skills/kb-wiki-shell
+export SKILL_DIR="$(ls -td ~/.claude/plugins/cache/kb-wiki-skills/kb-wiki-shell/*/kb-wiki-shell | head -n 1)"
 ```
 
-3. Check the skill: start `claude` and type `/kb-wiki-shell`; it should be listed. If not, check that `~/.claude/skills/kb-wiki-shell/SKILL.md` exists.
+3. Check the skill: start `claude` and type `/kb-wiki-shell`; `/kb-wiki-shell:kb-wiki-shell` should be listed. If not: `claude plugin list` must show `kb-wiki-shell@kb-wiki-skills`, enabled.
 
 4. Check the tools:
 
 ```bash
 jq --version && bash --version | head -1 && git --version
 ```
+
+Updates need no action: Claude Code fetches new versions during a session; they load at the next start. The installer already created the wiki; Step 2 is for a manual setup.
 
 ## Step 2 — Create the wiki skeleton
 
@@ -287,7 +263,7 @@ The web app cannot reach your computer and has no `git`, so ingest and update ar
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `/kb-wiki-shell` not listed | Skill not in `~/.claude/skills/kb-wiki-shell/SKILL.md` | Re-copy the folder; restart `claude` |
+| `/kb-wiki-shell:kb-wiki-shell` not listed | Plugin not installed or disabled | `claude plugin list`; rerun the installer; restart `claude` |
 | `Permission denied` on a script | Execute bit lost | `chmod +x $SKILL_DIR/scripts/*.sh` |
 | `missing tool: jq` | `jq` not installed | Install it (Before you start) |
 | `$'\r': command not found` | Windows line endings after extraction | For each script: `tr -d '\r' < f.sh > f.tmp && mv f.tmp f.sh` |

@@ -8,7 +8,18 @@
     {
       "name": "kb-wiki-shell",
       "source": "./",
-      "description": "Knowledge wiki skill using bash and jq (no Python): inventory, convert, digest, triage, lint"
+      "strict": false,
+      "description": "Knowledge wiki skill using bash and jq (no Python): inventory, convert, digest, triage, clean, lint",
+      "keywords": ["wiki", "knowledge-base", "markdown", "tokens"],
+      "skills": ["./kb-wiki-shell"]
+    },
+    {
+      "name": "kb-wiki",
+      "source": "./",
+      "strict": false,
+      "description": "Knowledge wiki skill using Python 3.8+ (standard library), for HPC clusters such as Nibi: inventory, convert, digest, triage, clean, lint",
+      "keywords": ["wiki", "knowledge-base", "markdown", "tokens", "hpc"],
+      "skills": ["./kb-wiki"]
     }
   ]
 }

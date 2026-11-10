@@ -2,75 +2,61 @@
 
 Claude Code skills that build and maintain a markdown knowledge wiki: inventory sources, convert PDFs, images and chat transcripts to markdown, triage duplicate/outdated/failed material, distill pages, index, lint, audit and de-duplicate existing pages. Claude reads the wiki through a short `INDEX.md` and opens only the pages a task needs.
 
-| Folder | Skill | Runtime | Use on |
+| Folder | Skill (plugin command) | Runtime | Use on |
 | --- | --- | --- | --- |
-| `kb-wiki/` | `/kb-wiki` | Python 3.8+ (standard library) | Nibi |
-| `kb-wiki-shell/` | `/kb-wiki-shell` | bash, standard Unix tools, `jq`; `pdftotext` optional | Linux, macOS, WSL, Git Bash |
+| `kb-wiki/` | `/kb-wiki:kb-wiki` | Python 3.8+ (standard library) | Nibi |
+| `kb-wiki-shell/` | `/kb-wiki-shell:kb-wiki-shell` | bash, standard Unix tools, `jq`; `pdftotext` optional | Linux, macOS, WSL, Git Bash |
 
 Both produce the same wiki layout and use the same page template. Inventories and indexes are `.csv` (Python) or `.tsv` (shell).
 
 ## Install
 
-Pick one route. Routes 1 and 2 install the shell version (`kb-wiki-shell`); route 3 covers the Claude app.
+Both skills are Claude Code plugins from this repository (marketplace `kb-wiki-skills`). One command installs the plugin, turns on auto-update, and creates or clones the wiki. After that, new versions arrive without any action: Claude Code checks GitHub during a session and loads the new version at the next start.
 
-### 1. Claude Code plugin (two commands, no clone)
+| Where | Command (once) | Updates |
+| --- | --- | --- |
+| Nibi (Python version) | `module load python`, then `curl -fsSL https://raw.githubusercontent.com/QDher/kb_wiki_skill/main/install.sh \| bash -s -- --python` | automatic |
+| Own computer (shell version) | `curl -fsSL https://raw.githubusercontent.com/QDher/kb_wiki_skill/main/install.sh \| bash` | automatic |
+| Claude Code on the web (claude.ai/code) | none: a SessionStart hook in the wiki repository installs the plugin in each session (see below) | automatic (fresh install per session) |
+| Claude app (claude.ai chats, Projects) | no skill: put `CLAUDE.md` in the Project instructions and `INDEX.md` + needed pages in Project knowledge | re-upload changed pages |
 
-Run in your terminal:
+Installer options: `--python` (plugin `kb-wiki` instead of `kb-wiki-shell`), `--kb-root DIR` (default `$KB_ROOT` or `~/kb`), `--wiki-repo URL` (clone an existing wiki instead of creating one), `--no-wiki`, `--dry-run`. It is safe to run again. It also:
+- sets `"autoUpdate": true` for the marketplace in `~/.claude/settings.json` (third-party marketplaces do not auto-update by default);
+- moves an older copy in `~/.claude/skills/<skill>` (from earlier installers) to `~/.claude/<skill>.old-<date>`, so it does not shadow the plugin;
+- adds `@<wiki>/CLAUDE.md` to `~/.claude/CLAUDE.md` once.
+
+Add to your shell profile (`~/.bashrc`):
+
+```bash
+export KB_ROOT=$HOME/kb
+export SKILL_DIR="$(ls -td ~/.claude/plugins/cache/kb-wiki-skills/kb-wiki/*/kb-wiki | head -n 1)"   # Nibi; for the shell version: kb-wiki-shell/*/kb-wiki-shell
+```
+
+`SKILL_DIR` is computed at each login because the plugin folder name changes with each version. In Claude Code, the skill is `/kb-wiki:kb-wiki` or `/kb-wiki-shell:kb-wiki-shell`. Each `SKILL.md` describes the modes: `init`, `ingest`, `update`, `search`, `clean`, `lint`.
+
+**Without the installer** (two commands, then enable auto-update in `/plugin` > Marketplaces > kb-wiki-skills):
 
 ```bash
 claude plugin marketplace add QDher/kb_wiki_skill
-claude plugin install kb-wiki-shell@kb-wiki-skills
+claude plugin install kb-wiki@kb-wiki-skills          # or kb-wiki-shell@kb-wiki-skills
 ```
 
-Or, inside a Claude Code session: `/plugin marketplace add QDher/kb_wiki_skill`, then `/plugin install kb-wiki-shell@kb-wiki-skills`. For a private repository, git must be able to authenticate to GitHub (`gh auth login`, an SSH key, or a credential helper). Update later with `claude plugin update kb-wiki-shell@kb-wiki-skills`.
+**Update now** instead of waiting: `claude plugin marketplace update kb-wiki-skills && claude plugin update kb-wiki@kb-wiki-skills`, then restart Claude Code.
 
-The plugin installs the skill only. Create the wiki afterwards, or ask Claude Code: "use the kb-wiki-shell skill, init mode".
-
-### 2. Installer script (skill and wiki in one step)
+**Claude Code on the web.** Add to the wiki repository `.claude/hooks/session-start.sh`:
 
 ```bash
-git clone https://github.com/QDher/kb_wiki_skill.git
-bash kb_wiki_skill/install.sh                      # shell version, creates ~/kb
-bash kb_wiki_skill/install.sh --python             # Python version (Nibi), creates ~/kb
-bash kb_wiki_skill/install.sh --wiki-repo https://github.com/<owner>/<wiki-repo>.git   # clone an existing wiki
-bash kb_wiki_skill/install.sh --dry-run            # show the actions only
+#!/bin/bash
+[ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || exit 0
+claude plugin list 2>/dev/null | grep -q "kb-wiki-shell@kb-wiki-skills" && exit 0
+claude plugin marketplace add QDher/kb_wiki_skill >/dev/null 2>&1
+claude plugin install kb-wiki-shell@kb-wiki-skills >/dev/null 2>&1 || echo "kb-wiki: plugin install failed" >&2
+exit 0
 ```
 
-The script copies the skill to `~/.claude/skills/`, creates or clones the wiki, adds `@<wiki>/CLAUDE.md` to `~/.claude/CLAUDE.md` (once), and prints the two `export` lines to add to your shell profile. It is safe to run again.
+and register it under `hooks.SessionStart` in `.claude/settings.json` with the command `$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh`. Cloud sessions ignore plugin settings in a repository's `.claude/settings.json`, so the hook is needed.
 
-**Update** (routes 2 and manual copy). `~/.claude/skills/<skill>` is a copy, not a git repository: `git pull` does not work there. Download the new version to a temporary folder, reinstall, delete the download. The wiki is not changed.
-
-```bash
-tmp=$(mktemp -d) && git clone -q --depth 1 https://github.com/QDher/kb_wiki_skill.git "$tmp/kbs" && bash "$tmp/kbs/install.sh" --python; rm -rf "$tmp"
-```
-
-Omit `--python` for the shell version. On Nibi run `module load python` first. Plugin installs (route 1) update with `claude plugin marketplace update kb-wiki-skills` and `claude plugin update kb-wiki-shell@kb-wiki-skills`.
-
-### 3. Claude app (claude.ai and desktop)
-
-The Claude app cannot install a skill from a repository. Upload it once:
-
-```bash
-zip -r kb-wiki-shell.zip kb-wiki-shell
-```
-
-Then, in the app, open Settings > Capabilities > Skills (the menu name may vary), upload `kb-wiki-shell.zip`, and enable it. Code execution must be on. In the app the skill runs in a cloud sandbox with no access to your computer or Nibi: use it for `lint` and for conversion or digests of files uploaded to the chat. Ingest, update, and git work stay in Claude Code.
-
-### Manual copy
-
-```bash
-mkdir -p ~/.claude/skills
-cp -r kb_wiki_skill/kb-wiki-shell ~/.claude/skills/      # or kb-wiki
-chmod +x ~/.claude/skills/kb-wiki-shell/scripts/*.sh     # or kb-wiki/scripts/*
-export KB_ROOT=$HOME/kb
-export SKILL_DIR=$HOME/.claude/skills/kb-wiki-shell      # or kb-wiki
-bash $SKILL_DIR/scripts/init_kb.sh $KB_ROOT
-echo "@$KB_ROOT/CLAUDE.md" >> ~/.claude/CLAUDE.md
-```
-
-In Claude Code, run `/kb-wiki` or `/kb-wiki-shell` (installed as a plugin: `/kb-wiki-shell:kb-wiki-shell`). Each `SKILL.md` describes the modes: `init`, `ingest`, `update`, `search`, `clean`, `lint`.
-
-The Python version (`kb-wiki`) is not part of the plugin; use route 2 with `--python` or the manual copy.
+**Claude app, optional.** A skill can be uploaded as a zip (Settings > Capabilities > Skills, code execution on): `zip -r kb-wiki-shell.zip kb-wiki-shell`. It does not update itself, has no access to your computer, Nibi or git, and is only useful for `lint` and conversion of uploaded files.
 
 ## Layout of a wiki
 
@@ -85,9 +71,9 @@ kb/  CLAUDE.md  INDEX.md  README.md  log.md
 - [docs/tutorial-nibi-python.md](docs/tutorial-nibi-python.md): step-by-step tutorial for the Python version on Nibi.
 - [docs/tutorial-shell.md](docs/tutorial-shell.md): step-by-step tutorial for the shell version.
 
-## Cloning a private repository over HTTPS
+## Cloning a private wiki repository over HTTPS
 
-Enter a GitHub personal access token (read access) without storing it in the shell history or in `.git/config`:
+The wiki repository is private, so `git clone`, `pull` and `push` of the wiki need a GitHub credential. Set it up once per machine with `gh auth login` and `gh auth setup-git`, or an SSH key. For a single clone, enter a GitHub personal access token (read access) without storing it in the shell history or in `.git/config`:
 
 ```bash
 read -rsp "GitHub token: " GHT; echo; export GHT
@@ -100,3 +86,4 @@ unset GHT
 
 - Scripts were tested on sample data only (Linux). macOS and bash 3.2 are untested for the shell version.
 - The wiki content belongs in a separate private repository; this repository holds only the skills.
+- This repository is public so that plugin installs and auto-updates need no GitHub credential.

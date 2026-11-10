@@ -12,14 +12,13 @@ The kb-wiki skill turns scattered files and chats into a markdown wiki that Clau
 - Python 3.8+ (standard library only). On Nibi: `module load python`.
 - `git`.
 - Optional: `pip install pymupdf4llm` for better PDF output; `pdftotext` (poppler) is the fallback.
-- The folder `kb-wiki/` from this repository (or the archive `kb-wiki-nibi.tar.gz`).
 
 **Terms**
 
 | Term | Meaning |
 | --- | --- |
 | `KB_ROOT` | Wiki folder, default `~/kb` |
-| `SKILL_DIR` | Skill folder, default `~/.claude/skills/kb-wiki` |
+| `SKILL_DIR` | Skill folder inside the plugin cache (computed in `~/.bashrc`, see Step 1) |
 | `raw/` | Originals and converted files; never indexed or loaded |
 | Page | One markdown file with frontmatter, in `rules/`, `workflows/`, `projects/`, `knowledge/` or `reference/` |
 
@@ -27,41 +26,30 @@ The kb-wiki skill turns scattered files and chats into a markdown wiki that Clau
 
 ## Step 1 — Install the skill
 
-Claude Code loads any folder in `~/.claude/skills/` that contains a `SKILL.md`.
+The skill is the Claude Code plugin `kb-wiki`. It updates itself from GitHub.
 
-1. Get the skill onto Nibi, either by cloning this repository:
-
-```bash
-git clone https://github.com/QDher/kb_wiki_skill.git ~/kb_wiki_skill
-mkdir -p ~/.claude/skills
-cp -r ~/kb_wiki_skill/kb-wiki ~/.claude/skills/
-```
-
-or from an archive copied from your computer:
+1. Install the plugin, turn on auto-update and create the wiki (or clone it with `--wiki-repo <url>`):
 
 ```bash
-scp kb-wiki-nibi.tar.gz <user>@nibi.alliancecan.ca:~/      # run on your computer
-mkdir -p ~/.claude/skills                                   # run on Nibi
-tar -xzf ~/kb-wiki-nibi.tar.gz -C ~/.claude/skills
+module load python
+curl -fsSL https://raw.githubusercontent.com/QDher/kb_wiki_skill/main/install.sh | bash -s -- --python
 ```
 
-2. Make the scripts executable:
-
-```bash
-chmod +x ~/.claude/skills/kb-wiki/scripts/*
-```
-
-3. Set the variables (add to `~/.bashrc`, then `source ~/.bashrc`):
+2. Set the variables (add to `~/.bashrc`, then `source ~/.bashrc`):
 
 ```bash
 export KB_ROOT=$HOME/kb
-export SKILL_DIR=$HOME/.claude/skills/kb-wiki
+export SKILL_DIR="$(ls -td ~/.claude/plugins/cache/kb-wiki-skills/kb-wiki/*/kb-wiki | head -n 1)"
 export PROJECT=def-<pi>     # your Slurm allocation
 ```
 
-4. Check that Claude Code sees the skill. Start `claude` and type `/kb-wiki`; it should appear in the list. If it does not, check that `~/.claude/skills/kb-wiki/SKILL.md` exists.
+3. Check: start `claude` and type `/kb-wiki`; `/kb-wiki:kb-wiki` should be listed. If not: `claude plugin list` must show `kb-wiki@kb-wiki-skills`, enabled.
 
-To use it on your own computer too, repeat steps 1–3 there with `~/.claude/skills`.
+Updates need no action: Claude Code fetches new versions during a session; they load at the next start. To update at once: `claude plugin marketplace update kb-wiki-skills && claude plugin update kb-wiki@kb-wiki-skills`, then restart `claude`.
+
+To use it on your own computer, run the installer there without `--python` (shell version) or with it.
+
+The installer already created the wiki; Step 2 is for a manual setup.
 
 ## Step 2 — Create the wiki skeleton
 
@@ -307,7 +295,7 @@ Optional: the skill folder can be uploaded as a zip in Settings > Capabilities (
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `/kb-wiki` not listed | Skill not in `~/.claude/skills/kb-wiki/SKILL.md` | Re-copy the folder; restart `claude` |
+| `/kb-wiki:kb-wiki` not listed | Plugin not installed or disabled | `claude plugin list`; rerun the installer; restart `claude` |
 | `Permission denied` on a script | Execute bit lost | `chmod +x $SKILL_DIR/scripts/*` |
 | `python3: command not found` or old version | Module not loaded | `module load python` |
 | `no PDF converter` in `failed.txt` | Neither pymupdf4llm nor pdftotext available | Create the venv (Step 5) or `module load poppler` |

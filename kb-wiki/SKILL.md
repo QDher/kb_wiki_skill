@@ -10,7 +10,7 @@ Maintains a git-versioned markdown wiki that Claude reads through `INDEX.md`, lo
 ## Paths
 
 - `KB_ROOT` = wiki root (default `$HOME/kb`). `raw/` inside it holds originals and is never indexed.
-- `SKILL_DIR` = folder containing this file (`~/.claude/skills/kb-wiki` or `<repo>/.claude/skills/kb-wiki`).
+- `SKILL_DIR` = folder containing this file (the "Base directory for this skill" shown when the skill loads). Installed as a plugin: `~/.claude/plugins/cache/kb-wiki-skills/kb-wiki/<version>/kb-wiki`.
 - Scripts are Python 3.8+ standard library; `pymupdf4llm` is optional for better PDF output.
 
 ## Modes
