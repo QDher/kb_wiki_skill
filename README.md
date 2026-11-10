@@ -43,6 +43,22 @@ kb/  CLAUDE.md  INDEX.md  README.md  log.md
      raw/   (originals and converted files; not committed, not loaded)
 ```
 
+## Documentation
+
+- [docs/tutorial-nibi-python.md](docs/tutorial-nibi-python.md): step-by-step tutorial for the Python version on Nibi.
+- [docs/tutorial-shell.md](docs/tutorial-shell.md): step-by-step tutorial for the shell version.
+
+## Cloning a private repository over HTTPS
+
+Enter a GitHub personal access token (read access) without storing it in the shell history or in `.git/config`:
+
+```bash
+read -rsp "GitHub token: " GHT; echo; export GHT
+H='!f() { echo "username=<github-user>"; echo "password=$GHT"; }; f'
+git -c credential.helper="$H" clone https://github.com/<owner>/<repo>.git
+unset GHT
+```
+
 ## Notes
 
 - Scripts were tested on sample data only (Linux). macOS and bash 3.2 are untested for the shell version.
